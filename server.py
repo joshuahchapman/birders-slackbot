@@ -114,7 +114,7 @@ def command():
 
     channel_id = msg['channel_id']
     channel_name = msg['channel_name']
-    full_command = msg['text']
+    full_command = msg['text'].split()
     cmd = full_command[0]
 
     print(cmd)
@@ -127,7 +127,7 @@ def command():
                 200)
 
     # Validate parameters
-    params_valid, validation_message, cmd, cmd_parameters = parse_parameters(full_command.split())
+    params_valid, validation_message, cmd, cmd_parameters = parse_parameters(full_command)
 
     if not params_valid:
         return make_response(validation_message, 200)
