@@ -117,6 +117,8 @@ def command():
     full_command = msg['text']
     cmd = full_command[0]
 
+    print(cmd)
+
     if cmd in RESTRICTED_COMMANDS.keys():
         if channel_name not in RESTRICTED_COMMANDS[cmd]:
             return make_response(
