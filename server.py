@@ -81,6 +81,11 @@ def handle_command(cmd, cmd_params, channel_id):
             text=return_message
         )
 
+        if channel_msg['ok']:
+            print('Message sent to Slack successfully')
+        else:
+            print('Error message from Slack: ' + channel_msg['error'])
+
         return
 
     if cmd == 'recent-notable':
@@ -88,10 +93,12 @@ def handle_command(cmd, cmd_params, channel_id):
         lat = cmd_params[0]
         long = cmd_params[1]
 
+        print('lat={lat}, long={long}'.format(lat=lat, long=long))
+
         df = ebird_client.get_recent_notable_observations_by_lat_long(lat, long, distance=8, days_back=3)
 
         if df.empty or 'errors' in df.columns:
-            return 'eBird returned no notable observations near latitude ' + lat + ', longitude ' + long
+            return_message = 'eBird returned no notable observations near latitude ' + lat + ', longitude ' + long
 
         else:
             return_message = ''
@@ -101,6 +108,8 @@ def handle_command(cmd, cmd_params, channel_id):
                     '%-m/%-d at %-I:%M %p')
                 return_message = return_message + '*' + row['comName'] + '*, ' + \
                     row['locName'] + ', on ' + pretty_dtm + '\n'
+
+        print('Sending message to Slack: {msg}'.format(msg=return_message))
 
         # send channel a message
         channel_msg = slack_client.api_call(
