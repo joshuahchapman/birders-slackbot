@@ -72,7 +72,7 @@ def handle_command(cmd, cmd_params, channel_id):
                 return_message = return_message + '*' + row['comName'] + '*, ' + \
                     row['locName'] + ', on ' + pretty_dtm + '\n'
 
-        print('Sending message to Slack: {msg}'.format(msg=return_message))
+        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=channel_id, msg=return_message))
 
         # send channel a message
         channel_msg = slack_client.api_call(
@@ -109,7 +109,7 @@ def handle_command(cmd, cmd_params, channel_id):
                 return_message = return_message + '*' + row['comName'] + '*, ' + \
                     row['locName'] + ', on ' + pretty_dtm + '\n'
 
-        print('Sending message to Slack: {msg}'.format(msg=return_message))
+        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=channel_id, msg=return_message))
 
         # send channel a message
         channel_msg = slack_client.api_call(
