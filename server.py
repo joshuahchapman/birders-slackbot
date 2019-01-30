@@ -45,7 +45,7 @@ def parse_parameters(parameter_list):
     return valid, validation_message, cmd, parameter_list
 
 
-def handle_command(cmd, cmd_params, channel_id):
+def handle_command(cmd, cmd_params, to_channel_id):
 
     print('Handling command...')
 
@@ -72,12 +72,12 @@ def handle_command(cmd, cmd_params, channel_id):
                 return_message = return_message + '*' + row['comName'] + '*, ' + \
                     row['locName'] + ', on ' + pretty_dtm + '\n'
 
-        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=channel_id, msg=return_message))
+        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=to_channel_id, msg=return_message))
 
         # send channel a message
         channel_msg = slack_client.api_call(
             "chat.postMessage",
-            channel=channel_id,
+            channel=to_channel_id,
             text=return_message
         )
 
@@ -109,12 +109,12 @@ def handle_command(cmd, cmd_params, channel_id):
                 return_message = return_message + '*' + row['comName'] + '*, ' + \
                     row['locName'] + ', on ' + pretty_dtm + '\n'
 
-        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=channel_id, msg=return_message))
+        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=to_channel_id, msg=return_message))
 
         # send channel a message
         channel_msg = slack_client.api_call(
             "chat.postMessage",
-            channel=channel_id,
+            channel=to_channel_id,
             text=return_message
         )
 
@@ -134,17 +134,18 @@ def command():
 
     channel_id = msg['channel_id']
     channel_name = msg['channel_name']
+    user_id = msg['user_id']
     full_command = msg['text'].split()
     cmd = full_command[0]
 
     print(cmd)
 
-    if cmd in RESTRICTED_COMMANDS.keys():
-        if channel_name not in RESTRICTED_COMMANDS[cmd]:
-            return make_response(
-                'Sorry, command _' + cmd + '_ is not allowed in this channel. ' +
-                'Please try it in a direct message (e.g. with yourself).',
-                200)
+#    if cmd in RESTRICTED_COMMANDS.keys():
+#        if channel_name not in RESTRICTED_COMMANDS[cmd]:
+#            return make_response(
+#                'Sorry, command _' + cmd + '_ is not allowed in this channel. ' +
+#                'Please try it in a direct message (e.g. with yourself).',
+#                200)
 
     # Validate parameters
     params_valid, validation_message, cmd, cmd_parameters = parse_parameters(full_command)
@@ -153,7 +154,7 @@ def command():
         return make_response(validation_message, 200)
 
     else:
-        thread = Thread(target=handle_command, args=(cmd, cmd_parameters, channel_id))
+        thread = Thread(target=handle_command, args=(cmd, cmd_parameters, user_id))
         thread.start()
 
         return make_response(validation_message, 200)
