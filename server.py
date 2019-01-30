@@ -18,10 +18,6 @@ COMMAND_PARAMS = {
     'recent': ['latitude', 'longitude'],
     'recent-notable': ['latitude', 'longitude']
 }
-RESTRICTED_COMMANDS = {
-    'recent': ['directmessage', 'bot-test'],
-    'recent-notable': ['directmessage', 'bot-test']
-}
 
 
 def parse_parameters(parameter_list):
@@ -132,20 +128,11 @@ def command():
     msg = request.form
     print(msg)
 
-    channel_id = msg['channel_id']
-    channel_name = msg['channel_name']
     user_id = msg['user_id']
     full_command = msg['text'].split()
     cmd = full_command[0]
 
     print(cmd)
-
-#    if cmd in RESTRICTED_COMMANDS.keys():
-#        if channel_name not in RESTRICTED_COMMANDS[cmd]:
-#            return make_response(
-#                'Sorry, command _' + cmd + '_ is not allowed in this channel. ' +
-#                'Please try it in a direct message (e.g. with yourself).',
-#                200)
 
     # Validate parameters
     params_valid, validation_message, cmd, cmd_parameters = parse_parameters(full_command)
