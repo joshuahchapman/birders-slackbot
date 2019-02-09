@@ -52,8 +52,8 @@ def handle_command(cmd, cmd_params, to_channel_id):
 
         print('lat={lat}, long={long}'.format(lat=lat, long=long))
 
-        if len(cmd_params) > 0:
-            print('additional parameters: ' + ''.join(cmd_params))
+        for param in cmd_params:
+            print('parsing parameter: ' + param)
 
         df = ebird_client.get_recent_observations_by_lat_long(lat, long, distance=8, days_back=3)
 
