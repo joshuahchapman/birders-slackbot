@@ -76,7 +76,32 @@ class EbirdClient:
 
         return df
 
-    def get_recent_notable_observations_by_lat_long(self, latitude, longitude, distance=25,
+    def get_recent_notable_observations_by_lat_long(self, latitude, longitude, **kwargs):
+
+        OPTIONAL_PARAMS = {
+            'dist': 25,
+            'back': 14,
+            'maxResults': None,
+            'detail': 'simple',
+            'hotspot': 'false'
+        }
+
+        api_params = {"key": self.api_token, "lat": latitude, "lng": longitude}
+        api_params.update(OPTIONAL_PARAMS)
+
+        for key, value in kwargs.items():
+            if key in OPTIONAL_PARAMS:
+                api_params[key] = value
+            else:
+                print('Ignoring unrecognized parameter ' + key)
+
+        obs = requests.get(API_ROOT + OBS_ENDPOINT + "/geo/recent/notable", params=api_params)
+        data = obs.json()
+        df = pd.DataFrame.from_dict(data)
+
+        return df
+
+    def old_get_recent_notable_observations_by_lat_long(self, latitude, longitude, distance=25,
                                             days_back=14, max_results=0):
 
         api_params = {"key": self.api_token, "lat": latitude, "lng": longitude,

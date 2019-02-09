@@ -55,12 +55,22 @@ def recent(slack_client, ebird_client, cmd_params, to_channel_id):
 
 def recent_notable(slack_client, ebird_client, cmd_params, to_channel_id):
 
-    lat = cmd_params[0]
-    long = cmd_params[1]
+    lat = cmd_params.pop(0)
+    long = cmd_params.pop(0)
 
     print('lat={lat}, long={long}'.format(lat=lat, long=long))
 
-    df = ebird_client.get_recent_notable_observations_by_lat_long(lat, long, distance=8, days_back=3)
+    options = {}
+    for param in cmd_params:
+        print('parsing parameter: ' + param)
+        parsed = param.split('=')
+        options[parsed[0]] = parsed[1]
+
+    # set default distance to 8km (~5mi), since most users are interested in Five Mile Radius birding
+    if 'dist' not in options:
+        options['dist'] = 8
+
+    df = ebird_client.get_recent_notable_observations_by_lat_long(lat, long, **options)
 
     if df.empty or 'errors' in df.columns:
         return_message = 'eBird returned no notable observations near latitude ' + lat + ', longitude ' + long
