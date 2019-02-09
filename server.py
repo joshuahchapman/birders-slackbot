@@ -25,6 +25,9 @@ def parse_parameters(parameter_list):
 
     cmd = parameter_list.pop(0)
 
+    # temporary alias until users convert to new name
+    cmd = 'recent_notable' if cmd == 'recent-notable' else cmd
+
     if cmd not in COMMAND_PARAMS.keys():
         valid = False
         validation_message = 'Sorry, I don''t recognize the command _' + cmd + '_. ' + \
@@ -38,9 +41,6 @@ def parse_parameters(parameter_list):
     else:
         valid = True
         validation_message = 'Command received. Working on it!'
-
-    # temporary alias until users convert to new name
-    cmd = 'recent_notable' if cmd == 'recent-notable' else cmd
 
     return valid, validation_message, cmd, parameter_list
 
