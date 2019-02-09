@@ -3,14 +3,23 @@ from datetime import datetime
 
 def recent(slack_client, ebird_client, cmd_params, to_channel_id):
 
+    OPTIONAL_PARAMS = ['dist', 'back', 'cat', 'maxResults', 'includeProvisional', 'hotspot', 'sort', 'sppLocale']
+
     lat = cmd_params.pop(0)
     long = cmd_params.pop(0)
 
     print('lat={lat}, long={long}'.format(lat=lat, long=long))
 
+    options = {}
     for param in cmd_params:
         print('parsing parameter: ' + param)
+        parsed = param.split('=')
+        if parsed[0] in OPTIONAL_PARAMS:
+            options[parsed[0]] = parsed[1]
+        else:
+            print('Ignoring unrecognized parameter ' + parsed[0])
 
+#    df = ebird_client.get_recent_observations_by_lat_long(lat, long, distance=8, days_back=3)
     df = ebird_client.get_recent_observations_by_lat_long(lat, long, distance=8, days_back=3)
 
     print('Rows returned: {rowcount}'.format(rowcount=len(df.index)))
