@@ -13,7 +13,7 @@ ebird_client = EbirdClient(EBIRD_TOKEN)
 
 app = Flask(__name__)
 
-# list of accepted commands
+# list of accepted commands and their required parameters
 COMMAND_PARAMS = {
     'recent': ['latitude', 'longitude'],
     'recent-notable': ['latitude', 'longitude']
@@ -29,9 +29,9 @@ def parse_parameters(parameter_list):
         validation_message = 'Sorry, I don''t recognize the command _' + cmd + '_. ' + \
             'These are the commands I know: _' + '_, _'.join(COMMAND_PARAMS.keys()) + '_.'
 
-    elif len(parameter_list) != len(COMMAND_PARAMS[cmd]):
+    elif len(parameter_list) < len(COMMAND_PARAMS[cmd]):
         valid = False
-        validation_message = 'Looks like you have the wrong number of inputs.\n' \
+        validation_message = 'Looks like you don''t have enough inputs.\n' \
             + 'Expected format: `/ebird ' + cmd + ' ' + ' '.join(COMMAND_PARAMS[cmd]) + '`.'
 
     else:
@@ -47,10 +47,13 @@ def handle_command(cmd, cmd_params, to_channel_id):
 
     if cmd == 'recent':
 
-        lat = cmd_params[0]
-        long = cmd_params[1]
+        lat = cmd_params.pop(0)
+        long = cmd_params.pop(0)
 
         print('lat={lat}, long={long}'.format(lat=lat, long=long))
+
+        if len(cmd_params) > 0:
+            print('additional parameters: ' + cmd_params)
 
         df = ebird_client.get_recent_observations_by_lat_long(lat, long, distance=8, days_back=3)
 
