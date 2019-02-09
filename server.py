@@ -17,7 +17,7 @@ app = Flask(__name__)
 # list of accepted commands and their required parameters
 COMMAND_PARAMS = {
     'recent': ['latitude', 'longitude'],
-    'recent-notable': ['latitude', 'longitude']
+    'recent_notable': ['latitude', 'longitude']
 }
 
 
