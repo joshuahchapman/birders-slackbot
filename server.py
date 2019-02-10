@@ -79,6 +79,31 @@ def command():
         return make_response(validation_message, 200)
 
 
+@app.route("/slack/5mr", methods=["POST"])
+def command():
+
+    msg = request.form
+    print(msg)
+
+    user_id = msg['user_id']
+    full_command = msg['text'].split()
+    cmd = full_command[0]
+
+    print(cmd)
+
+    # Validate parameters
+    params_valid, validation_message, cmd, cmd_parameters = parse_parameters(full_command)
+
+    if not params_valid:
+        return make_response(validation_message, 200)
+
+    else:
+        thread = Thread(target=handle_command, args=(cmd, cmd_parameters, user_id))
+        thread.start()
+
+        return make_response(validation_message, 200)
+
+
 # Start the Flask server
 if __name__ == "__main__":
     app.run()
