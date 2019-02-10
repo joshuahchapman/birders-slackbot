@@ -80,7 +80,7 @@ def command():
 
 
 @app.route("/slack/5mr", methods=["POST"])
-def command():
+def mr_command():
 
     msg = request.form
     print(msg)
