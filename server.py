@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 from threading import Thread
 from flask import Flask, request, make_response
 from slackclient import SlackClient
