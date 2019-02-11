@@ -1,5 +1,6 @@
 import os
-from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy import create_engine, MetaData, Table, select
+import ebird_commands
 
 db_uri = os.environ["DATABASE_URL"]
 engine = create_engine(db_uri)
@@ -11,7 +12,8 @@ ROOT_CMD = '5mr'
 # list of accepted commands and their required parameters
 COMMAND_PARAMS = {
     'add_circle': ['latitude', 'longitude'],
-    'list_circles': []
+    'list_circles': [],
+    'recent': ['latitude', 'longitude']
 }
 
 
@@ -92,4 +94,31 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
     else:
         print('Error message from Slack: ' + channel_msg['error'])
 
+    return
+
+
+# def list_circles(slack_client, ebird_client, cmd_params, user_id):
+
+
+def recent(slack_client, ebird_client, cmd_params, user_id):
+
+    conn = engine.connect()
+    print('Connected successfully. Trying select for user_id: ' + user_id)
+    s = select([user_circle]).where(user_circle.c.user_id == user_id)
+    result = conn.execute(s)
+    row = result.fetchone()
+    print(row)
+    result.close()
+
+    # options = {}
+    # for param in cmd_params:
+    #     print('parsing parameter: ' + param)
+    #     parsed = param.split('=')
+    #     options[parsed[0]] = parsed[1]
+    #
+    # # set default distance to 8km (~5mi), since most users are interested in Five Mile Radius birding
+    # if 'dist' not in options:
+    #     options['dist'] = 8
+    #
+    # ebird_commands.recent(slack_client, ebird_client, cmd_params, user_id)
     return
