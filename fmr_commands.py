@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import create_engine, MetaData, Table, select
 
 db_uri = os.environ["DATABASE_URL"]
+print(db_uri)
 engine = create_engine(db_uri)
 meta = MetaData(engine)
 user_circle = Table('user_circle', meta, autoload=True)
