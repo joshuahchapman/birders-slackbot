@@ -63,6 +63,8 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
 
     try:
         conn = engine.connect()
+        print('Connected successfully. Trying insert with the following options:')
+        print(options)
         conn.execute(user_circle.insert(), options)
         return_message = 'Created a circle with radius ' + options['radius_km'] + ' centered at ' + \
             str(options['latitude']) + ', ' + str(options['longitude']) + '.'
