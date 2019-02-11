@@ -1,7 +1,7 @@
 import os
-from sqlalchemy import create_engine, MetaData, Table, Column
+from sqlalchemy import create_engine, MetaData, Table
 
-db_uri = os.environ["DATABASE"]
+db_uri = os.environ["DATABASE_URL"]
 engine = create_engine(db_uri)
 meta = MetaData(engine)
 user_circle = Table('user_circle', meta, autoload=True)
