@@ -66,16 +66,17 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
     #     'radius_km': 8
     # }
 
-    conn = engine.connect()
-    print('Connected successfully. Trying insert with the following options:')
-    print(options)
-    conn.execute(user_circle.insert(), options)
-    return_message = 'Created a circle with radius ' + options['radius_km'] + ' centered at ' + \
-        str(options['latitude']) + ', ' + str(options['longitude']) + '.'
+    try:
+        conn = engine.connect()
+        print('Connected successfully. Trying insert with the following options:')
+        print(options)
+        conn.execute(user_circle.insert(), options)
+        return_message = 'Created a circle with radius ' + str(options['radius_km']) + ' centered at ' + \
+            str(options['latitude']) + ', ' + str(options['longitude']) + '.'
 
-    # except:
-    #     print('Database connection or insert failed.')
-    #     return_message = 'Sorry, there was an error creating your circle. Please report the issue to an admin.'
+    except:
+        print('Database connection or insert failed.')
+        return_message = 'Sorry, there was an error creating your circle. Please report the issue to an admin.'
 
     print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=user_id, msg=return_message))
 
