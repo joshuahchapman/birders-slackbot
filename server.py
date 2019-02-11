@@ -55,7 +55,7 @@ def handle_command(cmd, cmd_params, to_channel_id):
 
 
 @app.route("/slack/ebird", methods=["POST"])
-def command():
+def ebird_command():
 
     msg = request.form
     print(msg)
@@ -79,8 +79,8 @@ def command():
         return make_response(validation_message, 200)
 
 
-@app.route("/slack/5mr", methods=["POST"])
-def mr_command():
+@app.route("/slack/fmr", methods=["POST"])
+def fmr_command():
 
     msg = request.form
     print(msg)
