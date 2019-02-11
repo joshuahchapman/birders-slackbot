@@ -3,7 +3,7 @@ from threading import Thread
 from flask import Flask, request, make_response
 from slackclient import SlackClient
 from ebird import EbirdClient
-import commands
+import ebird_commands
 import fmr_commands
 
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
@@ -45,11 +45,12 @@ def parse_parameters(parameter_list):
     return valid, validation_message, cmd, parameter_list
 
 
-def handle_command(cmd, cmd_params, to_channel_id):
+def handle_command(slash_command, cmd, cmd_params, to_channel_id):
 
     print('Handling command...')
 
-    func = getattr(commands, cmd)
+    module = slash_command + '_commands'
+    func = getattr(module, cmd)
     func(slack_client, ebird_client, cmd_params, to_channel_id)
 
     return
@@ -75,7 +76,7 @@ def ebird_command():
         return make_response(validation_message, 200)
 
     else:
-        thread = Thread(target=handle_command, args=(cmd, cmd_parameters, user_id))
+        thread = Thread(target=handle_command, args=(slash_command, cmd, cmd_parameters, user_id))
         thread.start()
 
         return make_response(validation_message, 200)
@@ -101,7 +102,7 @@ def fmr_command():
         return make_response(validation_message, 200)
 
     else:
-        thread = Thread(target=handle_command, args=(cmd, cmd_parameters, user_id))
+        thread = Thread(target=handle_command, args=(slash_command, cmd, cmd_parameters, user_id))
         thread.start()
 
         return make_response(validation_message, 200)
