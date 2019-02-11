@@ -4,6 +4,7 @@ from flask import Flask, request, make_response
 from slackclient import SlackClient
 from ebird import EbirdClient
 import commands
+import fmr_commands
 
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
 EBIRD_TOKEN = os.environ["EBIRD_TOKEN"]
@@ -60,6 +61,7 @@ def ebird_command():
     msg = request.form
     print(msg)
 
+    slash_command = 'ebird'
     user_id = msg['user_id']
     full_command = msg['text'].split()
     cmd = full_command[0]
@@ -85,6 +87,7 @@ def fmr_command():
     msg = request.form
     print(msg)
 
+    slash_command = 'fmr'
     user_id = msg['user_id']
     full_command = msg['text'].split()
     cmd = full_command[0]
@@ -92,7 +95,7 @@ def fmr_command():
     print(cmd)
 
     # Validate parameters
-    params_valid, validation_message, cmd, cmd_parameters = parse_parameters(full_command)
+    params_valid, validation_message, cmd, cmd_parameters = fmr_commands.parse_parameters(full_command)
 
     if not params_valid:
         return make_response(validation_message, 200)

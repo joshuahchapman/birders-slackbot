@@ -36,17 +36,47 @@ def parse_parameters(parameter_list):
     return valid, validation_message, cmd, parameter_list
 
 
-def add_circle(user_id, lat, lon, radius_km=8, name=''):
-    ins = user_circle.insert().values(user_id='dummyuser', latitude=47.2491706, longitude=-122.5969097,
-                                      user_circle_name='mycir', radius_km=10)
-    conn = engine.connect()
+def add_circle(slack_client, cmd_params, user_id):
 
-    print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=to_channel_id, msg=return_message))
+    lat = cmd_params.pop(0)
+    long = cmd_params.pop(0)
+
+    options = {'user_id': user_id}
+    for param in cmd_params:
+        print('parsing parameter: ' + param)
+        parsed = param.split('=')
+        options[parsed[0]] = parsed[1]
+
+    # set default distance to 8km (~5mi)
+    if 'radius_km' not in options:
+        options['radius_km'] = 8
+
+    # note for later: if you're going to issue an *update* on the table, you'll have to set updated_at explicitly;
+    # the database won't handle it.
+
+    # options = {
+    #     'user_id': 'dummyuser2',
+    #     'latitude': 34.1075142,
+    #     'longitude': -118.2890215,
+    #     'radius_km': 8
+    # }
+
+    try:
+        conn = engine.connect()
+        conn.execute(user_circle.insert(), options)
+        return_message = 'Created a circle with radius ' + options['radius_km'] + ' centered at ' + \
+            str(options['latitude']) + ', ' + str(options['longitude']) + '.'
+
+    except:
+        print('Database connection or insert failed.')
+        return_message = 'Sorry, there was an error creating your circle. Please report the issue to an admin.'
+
+    print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=user_id, msg=return_message))
 
     # send channel a message
     channel_msg = slack_client.api_call(
         "chat.postMessage",
-        channel=to_channel_id,
+        channel=user_id,
         text=return_message
     )
 
