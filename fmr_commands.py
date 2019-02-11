@@ -41,7 +41,12 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
     lat = cmd_params.pop(0)
     long = cmd_params.pop(0)
 
-    options = {'user_id': user_id}
+    options = {
+        'user_id': user_id,
+        'latitude': lat,
+        'longitude': long
+    }
+
     for param in cmd_params:
         print('parsing parameter: ' + param)
         parsed = param.split('=')
