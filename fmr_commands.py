@@ -1,6 +1,6 @@
 import os
+from datetime import datetime
 from sqlalchemy import create_engine, MetaData, Table, select
-import ebird_commands
 
 db_uri = os.environ["DATABASE_URL"]
 engine = create_engine(db_uri)
@@ -13,7 +13,7 @@ ROOT_CMD = '5mr'
 COMMAND_PARAMS = {
     'add_circle': ['latitude', 'longitude'],
     'list_circles': [],
-    'recent': ['latitude', 'longitude']
+    'recent': []
 }
 
 
@@ -102,6 +102,9 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
 
 def recent(slack_client, ebird_client, cmd_params, user_id):
 
+    # optional parameters: back, cat, maxResults, includeProvisional, hotspot, sort, sppLocale
+    # lat, lng, and dist would not make sense here, since they're looked up from the database
+
     conn = engine.connect()
     print('Connected successfully. Trying select for user_id: ' + user_id)
     s = select([user_circle]).where(user_circle.c.user_id == user_id)
@@ -110,15 +113,45 @@ def recent(slack_client, ebird_client, cmd_params, user_id):
     print(row)
     result.close()
 
-    # options = {}
-    # for param in cmd_params:
-    #     print('parsing parameter: ' + param)
-    #     parsed = param.split('=')
-    #     options[parsed[0]] = parsed[1]
-    #
-    # # set default distance to 8km (~5mi), since most users are interested in Five Mile Radius birding
-    # if 'dist' not in options:
-    #     options['dist'] = 8
-    #
-    # ebird_commands.recent(slack_client, ebird_client, cmd_params, user_id)
+    lat = row['latitude']
+    long = row['longitude']
+
+    options = {}
+    for param in cmd_params:
+        print('parsing parameter: ' + param)
+        parsed = param.split('=')
+        options[parsed[0]] = parsed[1]
+
+    options['dist'] = row['radius_km']
+
+    df = ebird_client.get_recent_observations_by_lat_long(lat, long, **options)
+
+    print('Rows returned: {rowcount}'.format(rowcount=len(df.index)))
+
+    if df.empty or 'errors' in df.columns:
+        return_message = 'eBird returned no observations near latitude ' + lat + ', longitude ' + long
+
+    else:
+        return_message = ''
+        for index, row in df.iterrows():
+            # Format the datetime nicely for display.
+            pretty_dtm = datetime.strptime(row['obsDt'], '%Y-%m-%d %H:%M').strftime(
+                '%-m/%-d at %-I:%M %p')
+            return_message = return_message + '*' + row['comName'] + '*, ' + \
+                row['locName'] + ', on ' + pretty_dtm + '\n'
+
+    print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=user_id, msg=return_message))
+
+    # send channel a message
+    channel_msg = slack_client.api_call(
+        "chat.postMessage",
+        channel=user_id,
+        text=return_message
+    )
+
+    if channel_msg['ok']:
+        print('Message sent to Slack successfully')
+    else:
+        print('Error message from Slack: ' + channel_msg['error'])
+
     return
