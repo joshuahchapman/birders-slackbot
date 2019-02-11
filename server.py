@@ -49,8 +49,8 @@ def handle_command(slash_command, cmd, cmd_params, to_channel_id):
 
     print('Handling command...')
 
-    module = slash_command + '_commands'
-    func = getattr(module, cmd)
+    command_module = slash_command + '_commands'
+    func = getattr(command_module, cmd)
     func(slack_client, ebird_client, cmd_params, to_channel_id)
 
     return
@@ -102,7 +102,9 @@ def fmr_command():
         return make_response(validation_message, 200)
 
     else:
-        thread = Thread(target=handle_command, args=(slash_command, cmd, cmd_parameters, user_id))
+        # thread = Thread(target=handle_command, args=(slash_command, cmd, cmd_parameters, user_id))
+        func = getattr(fmr_commands, cmd)
+        thread = Thread(target=func, args=(slack_client, ebird_client, cmd_parameters, user_id))
         thread.start()
 
         return make_response(validation_message, 200)

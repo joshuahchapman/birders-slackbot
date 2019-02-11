@@ -36,7 +36,7 @@ def parse_parameters(parameter_list):
     return valid, validation_message, cmd, parameter_list
 
 
-def add_circle(slack_client, cmd_params, user_id):
+def add_circle(slack_client, ebird_client, cmd_params, user_id):
 
     lat = cmd_params.pop(0)
     long = cmd_params.pop(0)
