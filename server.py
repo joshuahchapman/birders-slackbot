@@ -45,12 +45,11 @@ def parse_parameters(parameter_list):
     return valid, validation_message, cmd, parameter_list
 
 
-def handle_command(slash_command, cmd, cmd_params, to_channel_id):
+def handle_command(cmd, cmd_params, to_channel_id):
 
     print('Handling command...')
 
-    command_module = slash_command + '_commands'
-    func = getattr(command_module, cmd)
+    func = getattr(ebird_commands, cmd)
     func(slack_client, ebird_client, cmd_params, to_channel_id)
 
     return
@@ -62,7 +61,6 @@ def ebird_command():
     msg = request.form
     print(msg)
 
-    slash_command = 'ebird'
     user_id = msg['user_id']
     full_command = msg['text'].split()
     cmd = full_command[0]
@@ -76,7 +74,7 @@ def ebird_command():
         return make_response(validation_message, 200)
 
     else:
-        thread = Thread(target=handle_command, args=(slash_command, cmd, cmd_parameters, user_id))
+        thread = Thread(target=handle_command, args=(cmd, cmd_parameters, user_id))
         thread.start()
 
         return make_response(validation_message, 200)
@@ -88,7 +86,6 @@ def fmr_command():
     msg = request.form
     print(msg)
 
-    slash_command = 'fmr'
     user_id = msg['user_id']
     full_command = msg['text'].split()
     cmd = full_command[0]
@@ -102,7 +99,6 @@ def fmr_command():
         return make_response(validation_message, 200)
 
     else:
-        # thread = Thread(target=handle_command, args=(slash_command, cmd, cmd_parameters, user_id))
         func = getattr(fmr_commands, cmd)
         thread = Thread(target=func, args=(slack_client, ebird_client, cmd_parameters, user_id))
         thread.start()
