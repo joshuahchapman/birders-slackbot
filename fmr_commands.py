@@ -15,6 +15,7 @@ ROOT_CMD = '5mr'
 COMMAND_PARAMS = {
     'add_circle': ['latitude', 'longitude'],
     'list_circles': [],
+    'set_default_circle': ['circle_name'],
     'recent': []
 }
 
