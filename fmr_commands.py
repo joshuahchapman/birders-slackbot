@@ -16,7 +16,8 @@ COMMAND_PARAMS = {
     'add_circle': ['latitude', 'longitude'],
     'list_circles': [],
     'set_default': ['circle_name'],
-    'recent': []
+    'recent': [],
+    'recent_notable': []
 }
 
 
