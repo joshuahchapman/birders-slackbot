@@ -24,3 +24,22 @@ def format_observation_list(observation_df):
 # def parse_slash_request():
 
 #    return
+
+
+def post_message(slack_client, channel_id, message):
+
+    print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=channel_id, msg=message))
+
+    # send channel a message
+    channel_msg = slack_client.api_call(
+        "chat.postMessage",
+        channel=channel_id,
+        text=message
+    )
+
+    if channel_msg['ok']:
+        print('Message sent to Slack successfully')
+    else:
+        print('Error message from Slack: ' + channel_msg['error'])
+
+    return

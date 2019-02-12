@@ -100,21 +100,7 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
     if circle_exists != 0:
         return_message = 'You already have a circle called ' + options['user_circle_name'] + '. ' + \
             'Please try again with a different name.'
-
-        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=user_id, msg=return_message))
-
-        # send channel a message
-        channel_msg = slack_client.api_call(
-            "chat.postMessage",
-            channel=user_id,
-            text=return_message
-        )
-
-        if channel_msg['ok']:
-            print('Message sent to Slack successfully')
-        else:
-            print('Error message from Slack: ' + channel_msg['error'])
-
+        su.post_message(slack_client, user_id, return_message)
         return
 
     # check if the user already has a default circle.
@@ -135,26 +121,15 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
         print('Connected successfully. Trying insert with the following options:')
         print(options)
         conn.execute(user_circle.insert(), options)
-        return_message = 'Created a circle with radius ' + str(options['radius_km']) + ' centered at ' + \
-            str(options['latitude']) + ', ' + str(options['longitude']) + '.'
+        return_message = 'Created a circle called ' + options['user_circle_name'] + ' with a radius of ' + \
+                         str(options['radius_km']) + 'km, centered at ' + str(options['latitude']) + ', ' + \
+                         str(options['longitude']) + '.'
 
     except:
         print('Database connection or insert failed.')
         return_message = 'Sorry, there was an error creating your circle. Please report the issue to an admin.'
 
-    print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=user_id, msg=return_message))
-
-    # send channel a message
-    channel_msg = slack_client.api_call(
-        "chat.postMessage",
-        channel=user_id,
-        text=return_message
-    )
-
-    if channel_msg['ok']:
-        print('Message sent to Slack successfully')
-    else:
-        print('Error message from Slack: ' + channel_msg['error'])
+    su.post_message(slack_client, user_id, return_message)
 
     return
 
