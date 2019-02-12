@@ -281,7 +281,7 @@ def recent_notable(slack_client, ebird_client, cmd_params, user_id):
     long = row['longitude']
     options['dist'] = row['radius_km']
 
-    df = ebird_client.get_recent_observations_by_lat_long(lat, long, **options)
+    df = ebird_client.get_recent_notable_observations_by_lat_long(lat, long, **options)
 
     print('Rows returned: {rowcount}'.format(rowcount=len(df.index)))
 
