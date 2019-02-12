@@ -40,6 +40,20 @@ def parse_parameters(parameter_list):
 
 
 def add_circle(slack_client, ebird_client, cmd_params, user_id):
+    """
+    To create a circle, you need the following fields:
+    - user_id
+    - latitude
+    - longitude
+    - user_circle_name (alias: name. This function will default it.)
+    - radius_km (alias: dist. This function will default it.)
+    - user_default_circle (For now, set by this function, not by the user.)
+    :param slack_client:
+    :param ebird_client:
+    :param cmd_params:
+    :param user_id:
+    :return:
+    """
 
     lat = cmd_params.pop(0)
     long = cmd_params.pop(0)
@@ -57,11 +71,53 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
 
     # set default distance to 8km (~5mi)
     if 'radius_km' not in options:
-        options['radius_km'] = 8
+        if 'dist' in options:
+            options['radius_km'] = options['dist']
+        else:
+            options['radius_km'] = 8
+
+    # set default circle name
+    if 'user_circle_name' not in options:
+        if 'name' in options:
+            options['user_circle_name'] = options['name']
+        else:
+            options['user_circle_name'] = 'circle1'
 
     # note for later: if you're going to issue an *update* on the table, you'll have to set updated_at explicitly;
     # the database won't handle it.
 
+    # check if the user already has a circle by this name.
+    conn = engine.connect()
+    print('Connected successfully. Checking for existing circle for this user and name.')
+    s = select([func.count()]).where(and_(user_circle.c.user_id == user_id,
+                                          user_circle.c.user_circle_name == options['user_circle_name']))
+    result = conn.execute(s)
+    row = result.fetchone()
+    result.close()
+    print(row)
+
+    circle_exists = row[0]
+    if circle_exists != 0:
+        return_message = 'You already have a circle called ' + options['user_circle_name'] + '. ' + \
+            'Please try again with a different name.'
+
+        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=user_id, msg=return_message))
+
+        # send channel a message
+        channel_msg = slack_client.api_call(
+            "chat.postMessage",
+            channel=user_id,
+            text=return_message
+        )
+
+        if channel_msg['ok']:
+            print('Message sent to Slack successfully')
+        else:
+            print('Error message from Slack: ' + channel_msg['error'])
+
+        return
+
+    # check if the user already has a default circle.
     conn = engine.connect()
     print('Connected successfully. Checking for existing default circle for this user.')
     s = select([func.count()]).where(and_(user_circle.c.user_id == user_id,
