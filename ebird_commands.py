@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import slack_utilities as su
 
 ROOT_CMD = '5mr'
 
@@ -59,13 +59,7 @@ def recent(slack_client, ebird_client, cmd_params, to_channel_id):
         return_message = 'eBird returned no observations near latitude ' + lat + ', longitude ' + long
 
     else:
-        return_message = ''
-        for index, row in df.iterrows():
-            # Format the datetime nicely for display.
-            pretty_dtm = datetime.strptime(row['obsDt'], '%Y-%m-%d %H:%M').strftime(
-                '%-m/%-d at %-I:%M %p')
-            return_message = return_message + '*' + row['comName'] + '*, ' + \
-                row['locName'] + ', on ' + pretty_dtm + '\n'
+        return_message = su.format_observation_list(df)
 
     print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=to_channel_id, msg=return_message))
 
@@ -107,13 +101,7 @@ def recent_notable(slack_client, ebird_client, cmd_params, to_channel_id):
         return_message = 'eBird returned no notable observations near latitude ' + lat + ', longitude ' + long
 
     else:
-        return_message = ''
-        for index, row in df.iterrows():
-            # Format the datetime nicely for display.
-            pretty_dtm = datetime.strptime(row['obsDt'], '%Y-%m-%d %H:%M').strftime(
-                '%-m/%-d at %-I:%M %p')
-            return_message = return_message + '*' + row['comName'] + '*, ' + \
-                row['locName'] + ', on ' + pretty_dtm + '\n'
+        return_message = su.format_observation_list(df)
 
     print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=to_channel_id, msg=return_message))
 

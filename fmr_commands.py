@@ -1,6 +1,6 @@
 import os
-from datetime import datetime
 from sqlalchemy import create_engine, MetaData, Table, select
+import slack_utilities as su
 
 db_uri = os.environ["DATABASE_URL"]
 print(db_uri)
@@ -133,13 +133,7 @@ def recent(slack_client, ebird_client, cmd_params, user_id):
         return_message = 'eBird returned no observations near latitude ' + lat + ', longitude ' + long
 
     else:
-        return_message = ''
-        for index, row in df.iterrows():
-            # Format the datetime nicely for display.
-            pretty_dtm = datetime.strptime(row['obsDt'], '%Y-%m-%d %H:%M').strftime(
-                '%-m/%-d at %-I:%M %p')
-            return_message = return_message + '*' + row['comName'] + '*, ' + \
-                row['locName'] + ', on ' + pretty_dtm + '\n'
+        return_message = su.format_observation_list(df)
 
     print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=user_id, msg=return_message))
 
