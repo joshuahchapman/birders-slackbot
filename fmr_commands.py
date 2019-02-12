@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine, MetaData, Table, select
+from sqlalchemy import create_engine, MetaData, Table, select, func, and_
 import slack_utilities as su
 
 db_uri = os.environ["DATABASE_URL"]
@@ -71,12 +71,15 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
 
     conn = engine.connect()
     print('Connected successfully. Checking for existing default circle for this user.')
-    s = select([user_circle]).where(user_circle.c.user_id == user_id
-                                    and user_circle.c.user_default_circle == 1)
+    s = select([func.count()]).where(and_(user_circle.c.user_id == user_id,
+                                          user_circle.c.user_default_circle == 1))
     result = conn.execute(s)
     row = result.fetchone()
-    print(row)
     result.close()
+
+    print(row)
+    has_default = row[0]
+    options['user_default_circle'] = 1 if has_default == 0 else 0
 
     try:
         conn = engine.connect()
