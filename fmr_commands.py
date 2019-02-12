@@ -146,8 +146,8 @@ def list_circles(slack_client, ebird_client, cmd_params, user_id):
     print(rows)
     msg = ''
     for row in rows:
-        msg = msg + '**' + row['user_circle_name'] + '**, radius ' + str(row['radius_km']) + ', lat ' + \
-            str(row['latitude']) + ', lon ' + str(row['longitude']) + ' default: ' + \
+        msg = msg + '*' + row['user_circle_name'] + '*, radius ' + str(row['radius_km']) + 'km, lat ' + \
+            str(float(row['latitude'])) + ', lon ' + str(float(row['longitude'])) + ', default: ' + \
             ('YES' if row['user_default_circle'] == 1 else 'NO') + '\n'
     print(msg)
 
