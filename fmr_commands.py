@@ -134,7 +134,26 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
     return
 
 
-# def list_circles(slack_client, ebird_client, cmd_params, user_id):
+def list_circles(slack_client, ebird_client, cmd_params, user_id):
+
+    conn = engine.connect()
+    print('Connected successfully. Pulling circles for this user.')
+    s = select([user_circle]).where(user_circle.c.user_id == user_id)
+    result = conn.execute(s)
+    rows = result.fetchall()
+    result.close()
+
+    print(rows)
+    msg = ''
+    for row in rows:
+        msg = msg + '**' + row['user_circle_name'] + '**, radius ' + str(row['radius_km']) + ', lat ' + \
+            str(row['latitude']) + ', lon ' + str(row['longitude']) + ' default: ' + \
+            ('YES' if row['user_default_circle'] == 1 else 'NO') + '\n'
+    print(msg)
+
+    su.post_message(slack_client, user_id, msg)
+
+    return
 
 
 def recent(slack_client, ebird_client, cmd_params, user_id):
