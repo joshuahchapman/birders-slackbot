@@ -62,13 +62,6 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
     # note for later: if you're going to issue an *update* on the table, you'll have to set updated_at explicitly;
     # the database won't handle it.
 
-    # options = {
-    #     'user_id': 'dummyuser2',
-    #     'latitude': 34.1075142,
-    #     'longitude': -118.2890215,
-    #     'radius_km': 8
-    # }
-
     conn = engine.connect()
     print('Connected successfully. Checking for existing default circle for this user.')
     s = select([func.count()]).where(and_(user_circle.c.user_id == user_id,
@@ -76,8 +69,8 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
     result = conn.execute(s)
     row = result.fetchone()
     result.close()
-
     print(row)
+
     has_default = row[0]
     options['user_default_circle'] = 1 if has_default == 0 else 0
 
@@ -127,18 +120,17 @@ def recent(slack_client, ebird_client, cmd_params, user_id):
     conn = engine.connect()
     print('Connected successfully. Trying select for user_id: ' + user_id)
 
-    if 'name' in options:
-        s = select([user_circle]).where(user_circle.c.user_id == user_id
-                                        and user_circle.c.user_circle_name == options['name'])
+    if 'user_circle_name' in options:
+        s = select([user_circle]).where(and_(user_circle.c.user_id == user_id,
+                                        user_circle.c.user_circle_name == options['user_circle_name']))
 
     else:
-        s = select([user_circle]).where(user_circle.c.user_id == user_id
-                                        and user_circle.c.user_default_circle == 1)
-
+        s = select([user_circle]).where(and_(user_circle.c.user_id == user_id,
+                                        user_circle.c.user_default_circle == 1))
     result = conn.execute(s)
     row = result.fetchone()
-    print(row)
     result.close()
+    print(row)
 
     lat = row['latitude']
     long = row['longitude']
