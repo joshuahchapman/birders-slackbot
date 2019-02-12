@@ -1,4 +1,3 @@
-from datetime import datetime
 import slack_utilities as su
 
 ROOT_CMD = '5mr'

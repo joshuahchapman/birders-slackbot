@@ -19,3 +19,8 @@ def format_observation_list(observation_df):
                          row['locName'] + ', on ' + pretty_dtm + '\n'
 
     return return_message
+
+
+# def parse_slash_request():
+
+#    return
