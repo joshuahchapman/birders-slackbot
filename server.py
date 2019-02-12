@@ -36,7 +36,7 @@ def ebird_command():
         func = getattr(ebird_commands, cmd)
         thread = Thread(target=func, args=(slack_client, ebird_client, cmd_parameters, user_id))
         thread.start()
-        return make_response(validation_message, 200)
+        return make_response(validation_message + '\n`' + msg['command'] + ' ' + msg['text'] + '`', 200)
 
 
 @app.route("/slack/fmr", methods=["POST"])

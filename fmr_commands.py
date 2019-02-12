@@ -69,6 +69,15 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
     #     'radius_km': 8
     # }
 
+    conn = engine.connect()
+    print('Connected successfully. Checking for existing default circle for this user.')
+    s = select([user_circle]).where(user_circle.c.user_id == user_id
+                                    and user_circle.c.user_default_circle == 1)
+    result = conn.execute(s)
+    row = result.fetchone()
+    print(row)
+    result.close()
+
     try:
         conn = engine.connect()
         print('Connected successfully. Trying insert with the following options:')
@@ -103,12 +112,26 @@ def add_circle(slack_client, ebird_client, cmd_params, user_id):
 
 def recent(slack_client, ebird_client, cmd_params, user_id):
 
+    options = {}
+    for param in cmd_params:
+        print('parsing parameter: ' + param)
+        parsed = param.split('=')
+        options[parsed[0]] = parsed[1]
+
     # optional parameters: back, cat, maxResults, includeProvisional, hotspot, sort, sppLocale
     # lat, lng, and dist would not make sense here, since they're looked up from the database
 
     conn = engine.connect()
     print('Connected successfully. Trying select for user_id: ' + user_id)
-    s = select([user_circle]).where(user_circle.c.user_id == user_id)
+
+    if 'name' in options:
+        s = select([user_circle]).where(user_circle.c.user_id == user_id
+                                        and user_circle.c.user_circle_name == options['name'])
+
+    else:
+        s = select([user_circle]).where(user_circle.c.user_id == user_id
+                                        and user_circle.c.user_default_circle == 1)
+
     result = conn.execute(s)
     row = result.fetchone()
     print(row)
@@ -116,13 +139,6 @@ def recent(slack_client, ebird_client, cmd_params, user_id):
 
     lat = row['latitude']
     long = row['longitude']
-
-    options = {}
-    for param in cmd_params:
-        print('parsing parameter: ' + param)
-        parsed = param.split('=')
-        options[parsed[0]] = parsed[1]
-
     options['dist'] = row['radius_km']
 
     df = ebird_client.get_recent_observations_by_lat_long(lat, long, **options)
