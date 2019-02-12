@@ -15,7 +15,7 @@ ROOT_CMD = '5mr'
 COMMAND_PARAMS = {
     'add_circle': ['latitude', 'longitude'],
     'list_circles': [],
-    'set_default_circle': ['circle_name'],
+    'set_default': ['circle_name'],
     'recent': []
 }
 
@@ -158,7 +158,7 @@ def list_circles(slack_client, ebird_client, cmd_params, user_id):
     return
 
 
-def set_default_circle(slack_client, ebird_client, cmd_params, user_id):
+def set_default(slack_client, ebird_client, cmd_params, user_id):
 
     print(cmd_params)
 
@@ -175,7 +175,7 @@ def set_default_circle(slack_client, ebird_client, cmd_params, user_id):
 
     if row is None:
         return_message = 'You don''t have a circle named ' + new_default_name + '. Please try again. ' + \
-            'You can use `' + ROOT_CMD + ' list_circles` to see the names of your circles.'
+            'You can use `/' + ROOT_CMD + ' list_circles` to see the names of your circles.'
         su.post_message(slack_client, user_id, return_message)
         return
 
@@ -210,15 +210,16 @@ def recent(slack_client, ebird_client, cmd_params, user_id):
         parsed = param.split('=')
         options[parsed[0]] = parsed[1]
 
-    # optional parameters: back, cat, maxResults, includeProvisional, hotspot, sort, sppLocale
+    # optional parameters for eBird: back, cat, maxResults, includeProvisional, hotspot, sort, sppLocale
     # lat, lng, and dist would not make sense here, since they're looked up from the database
+    # other optional parameters: circle_name
 
     conn = engine.connect()
     print('Connected successfully. Trying select for user_id: ' + user_id)
 
-    if 'user_circle_name' in options:
+    if 'circle_name' in options:
         s = select([user_circle]).where(and_(user_circle.c.user_id == user_id,
-                                        user_circle.c.user_circle_name == options['user_circle_name']))
+                                        user_circle.c.user_circle_name == options['circle_name']))
 
     else:
         s = select([user_circle]).where(and_(user_circle.c.user_id == user_id,
