@@ -139,7 +139,7 @@ def list_circles(slack_client, ebird_client, cmd_params, user_id):
 
     conn = engine.connect()
     print('Connected successfully. Pulling circles for this user.')
-    s = select([user_circle]).where(and_(user_circle.c.user_id == user_id), user_circle.c.deleted == 0)
+    s = select([user_circle]).where(and_(user_circle.c.user_id == user_id, user_circle.c.deleted == 0))
     result = conn.execute(s)
     rows = result.fetchall()
     result.close()
@@ -197,7 +197,7 @@ def set_default_circle(slack_client, ebird_client, cmd_params, user_id):
 
     return_message = 'Successfully set circle ' + new_default_name + ' to be your new default.'
     su.post_message(slack_client, user_id, return_message)
-    
+
     return
 
 
