@@ -229,6 +229,7 @@ def recent(slack_client, ebird_client, cmd_params, user_id):
     result.close()
     print(row)
 
+    circle_name = row['user_circle_name']
     lat = row['latitude']
     long = row['longitude']
     options['dist'] = row['radius_km']
@@ -238,7 +239,53 @@ def recent(slack_client, ebird_client, cmd_params, user_id):
     print('Rows returned: {rowcount}'.format(rowcount=len(df.index)))
 
     if df.empty or 'errors' in df.columns:
-        return_message = 'eBird returned no observations near latitude ' + lat + ', longitude ' + long
+        return_message = 'eBird returned no observations in circle ' + circle_name + '.'
+    else:
+        return_message = su.format_observation_list(df)
+
+    su.post_message(slack_client, user_id, return_message)
+
+    return
+
+
+def recent_notable(slack_client, ebird_client, cmd_params, user_id):
+
+    options = {}
+    for param in cmd_params:
+        print('parsing parameter: ' + param)
+        parsed = param.split('=')
+        options[parsed[0]] = parsed[1]
+
+    # optional parameters for eBird: back, maxResults, detail, hotspot
+    # lat, lng, and dist would not make sense here, since they're looked up from the database
+    # other optional parameters: circle_name
+
+    conn = engine.connect()
+    print('Connected successfully. Trying select for user_id: ' + user_id)
+
+    if 'circle_name' in options:
+        s = select([user_circle]).where(and_(user_circle.c.user_id == user_id,
+                                        user_circle.c.user_circle_name == options['circle_name']))
+
+    else:
+        s = select([user_circle]).where(and_(user_circle.c.user_id == user_id,
+                                        user_circle.c.user_default_circle == 1))
+    result = conn.execute(s)
+    row = result.fetchone()
+    result.close()
+    print(row)
+
+    circle_name = row['user_circle_name']
+    lat = row['latitude']
+    long = row['longitude']
+    options['dist'] = row['radius_km']
+
+    df = ebird_client.get_recent_observations_by_lat_long(lat, long, **options)
+
+    print('Rows returned: {rowcount}'.format(rowcount=len(df.index)))
+
+    if df.empty or 'errors' in df.columns:
+        return_message = 'eBird returned no notable observations in circle ' + circle_name + '.'
     else:
         return_message = su.format_observation_list(df)
 
