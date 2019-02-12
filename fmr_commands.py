@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from sqlalchemy import create_engine, MetaData, Table, select, func, and_
 import slack_utilities as su
 
@@ -138,7 +139,7 @@ def list_circles(slack_client, ebird_client, cmd_params, user_id):
 
     conn = engine.connect()
     print('Connected successfully. Pulling circles for this user.')
-    s = select([user_circle]).where(user_circle.c.user_id == user_id)
+    s = select([user_circle]).where(and_(user_circle.c.user_id == user_id), user_circle.c.deleted == 0)
     result = conn.execute(s)
     rows = result.fetchall()
     result.close()
@@ -153,6 +154,50 @@ def list_circles(slack_client, ebird_client, cmd_params, user_id):
 
     su.post_message(slack_client, user_id, msg)
 
+    return
+
+
+def set_default_circle(slack_client, ebird_client, cmd_params, user_id):
+
+    print(cmd_params)
+
+    new_default_name = cmd_params[0]
+
+    conn = engine.connect()
+    print('Connected successfully. Verifying existence of circle ' + new_default_name + ' for user ' + user_id + '.')
+    s = select([user_circle]).where(and_(user_circle.c.user_id == user_id,
+                                         user_circle.c.user_circle_name == new_default_name))
+    result = conn.execute(s)
+    row = result.fetchone()
+    result.close()
+    print(row)
+
+    if row is None:
+        return_message = 'You don''t have a circle named ' + new_default_name + '. Please try again. ' + \
+            'You can use `' + ROOT_CMD + ' list_circles` to see the names of your circles.'
+        su.post_message(slack_client, user_id, return_message)
+        return
+
+    # get current default circle, which will have to be un-set
+    s = select([user_circle]).where(and_(user_circle.c.user_id == user_id,
+                                         user_circle.c.user_default_circle == 1))
+    result = conn.execute(s)
+    # assumes only 1 default is set at any given time.
+    row = result.fetchone()
+    result.close()
+
+    u = user_circle.update().values(user_default_circle=0, updated_at=datetime.now()).\
+        where(user_circle.c.user_circle_id == row['user_circle_id'])
+    conn.execute(u)
+
+    # set new default
+    u = user_circle.update().values(user_default_circle=1, updated_at=datetime.now()).\
+        where(and_(user_circle.c.user_id == user_id, user_circle.c.user_circle_name == new_default_name))
+    conn.execute(u)
+
+    return_message = 'Successfully set circle ' + new_default_name + ' to be your new default.'
+    su.post_message(slack_client, user_id, return_message)
+    
     return
 
 
@@ -192,22 +237,9 @@ def recent(slack_client, ebird_client, cmd_params, user_id):
 
     if df.empty or 'errors' in df.columns:
         return_message = 'eBird returned no observations near latitude ' + lat + ', longitude ' + long
-
     else:
         return_message = su.format_observation_list(df)
 
-    print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=user_id, msg=return_message))
-
-    # send channel a message
-    channel_msg = slack_client.api_call(
-        "chat.postMessage",
-        channel=user_id,
-        text=return_message
-    )
-
-    if channel_msg['ok']:
-        print('Message sent to Slack successfully')
-    else:
-        print('Error message from Slack: ' + channel_msg['error'])
+    su.post_message(slack_client, user_id, return_message)
 
     return
