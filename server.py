@@ -24,7 +24,6 @@ def ebird_command():
     user_id = msg['user_id']
     full_command = msg['text'].split()
     cmd = full_command[0]
-
     print(cmd)
 
     # Validate parameters
@@ -37,8 +36,7 @@ def ebird_command():
         func = getattr(ebird_commands, cmd)
         thread = Thread(target=func, args=(slack_client, ebird_client, cmd_parameters, user_id))
         thread.start()
-
-        return make_response(validation_message, 200)
+        return make_response(validation_message + '\n`' + msg['command'] + ' ' + msg['text'] + '`', 200)
 
 
 @app.route("/slack/fmr", methods=["POST"])
@@ -50,7 +48,6 @@ def fmr_command():
     user_id = msg['user_id']
     full_command = msg['text'].split()
     cmd = full_command[0]
-
     print(cmd)
 
     # Validate parameters
@@ -63,8 +60,7 @@ def fmr_command():
         func = getattr(fmr_commands, cmd)
         thread = Thread(target=func, args=(slack_client, ebird_client, cmd_parameters, user_id))
         thread.start()
-
-        return make_response(validation_message, 200)
+        return make_response(validation_message + '\n`' + msg['command'] + ' ' + msg['text'] + '`', 200)
 
 
 # Start the Flask server
