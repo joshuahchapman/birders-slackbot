@@ -32,7 +32,7 @@ def parse_parameters(parameter_list):
 
     elif len(parameter_list) < len(COMMAND_PARAMS[cmd]):
         valid = False
-        validation_message = 'Looks like you don''t have enough inputs.\n' \
+        validation_message = "Looks like you don't have enough inputs.\n" \
             + 'Expected format: `/' + ROOT_CMD + ' ' + cmd + ' ' + ' '.join(COMMAND_PARAMS[cmd]) + '`.'
 
     else:
