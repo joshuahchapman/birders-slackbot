@@ -244,7 +244,8 @@ def recent(slack_client, ebird_client, cmd_params, user_id):
     if df.empty or 'errors' in df.columns:
         return_message = 'eBird returned no observations in circle ' + circle_name + '.'
     else:
-        return_message = su.format_observation_list(df)
+        return_message = 'Recent observations from circle ' + circle_name + ':\n'
+        return_message = return_message + su.format_observation_list(df)
 
     su.post_message(slack_client, user_id, return_message)
 
@@ -292,7 +293,8 @@ def recent_notable(slack_client, ebird_client, cmd_params, user_id):
     if df.empty or 'errors' in df.columns:
         return_message = 'eBird returned no notable observations in circle ' + circle_name + '.'
     else:
-        return_message = su.format_observation_list(df)
+        return_message = 'Recent notable observations from circle ' + circle_name + ':\n'
+        return_message = return_message + su.format_observation_list(df)
 
     su.post_message(slack_client, user_id, return_message)
 
