@@ -61,11 +61,6 @@ class FmrHandler:
         - user_circle_name (alias: name. This function will default it.)
         - radius_km (alias: dist. This function will default it.)
         - user_default_circle (For now, set by this function, not by the user.)
-        :param slack_client:
-        :param ebird_client:
-        :param cmd_params:
-        :param user_id:
-        :return:
         """
 
         lat = cmd_params.pop(0)
@@ -143,7 +138,6 @@ class FmrHandler:
             return_message = 'Sorry, there was an error creating your circle. Please report the issue to an admin.'
 
         su.post_message(slack_client, self.user_id, return_message)
-
         return
 
     def list_circles(self, slack_client, ebird_client, cmd_params):
@@ -164,7 +158,6 @@ class FmrHandler:
         print(msg)
 
         su.post_message(slack_client, self.user_id, msg)
-
         return
 
     def set_default(self, slack_client, ebird_client, cmd_params):
@@ -207,7 +200,6 @@ class FmrHandler:
 
         return_message = 'Successfully set circle ' + new_default_name + ' to be your new default.'
         su.post_message(slack_client, self.user_id, return_message)
-
         return
 
     def recent(self, slack_client, ebird_client, cmd_params):
@@ -252,7 +244,6 @@ class FmrHandler:
             return_message = return_message + su.format_observation_list(df)
 
         su.post_message(slack_client, self.user_id, return_message)
-
         return
 
     def recent_notable(self, slack_client, ebird_client, cmd_params):
@@ -297,7 +288,6 @@ class FmrHandler:
             return_message = return_message + su.format_observation_list(df)
 
         su.post_message(slack_client, self.user_id, return_message)
-
         return
 
 
@@ -318,7 +308,7 @@ class EbirdHandler:
     def __str__(self):
         return self.command + ' ' + self.subcommand_text
 
-    def recent(self, slack_client, ebird_client, cmd_params, to_channel_id):
+    def recent(self, slack_client, ebird_client, cmd_params):
 
         lat = cmd_params.pop(0)
         long = cmd_params.pop(0)
@@ -344,11 +334,10 @@ class EbirdHandler:
         else:
             return_message = su.format_observation_list(df)
 
-        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=to_channel_id, msg=return_message))
         su.post_message(slack_client, self.user_id, return_message)
         return
 
-    def recent_notable(self, slack_client, ebird_client, cmd_params, to_channel_id):
+    def recent_notable(self, slack_client, ebird_client, cmd_params):
 
         lat = cmd_params.pop(0)
         long = cmd_params.pop(0)
@@ -372,6 +361,5 @@ class EbirdHandler:
         else:
             return_message = su.format_observation_list(df)
 
-        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=to_channel_id, msg=return_message))
         su.post_message(slack_client, self.user_id, return_message)
         return
