@@ -16,9 +16,9 @@ app = Flask(__name__)
 
 def handler_factory(message):
     slash_command = message['command']
-    if slash_command in ['/5mr', '/fmr']:
+    if slash_command in ['/5mr', '/fmr', '/test-5mr', '/test-fmr']:
         handler = slash_commands.FmrHandler(message)
-    elif slash_command == '/ebird':
+    elif slash_command in ['/ebird', '/test-ebird']:
         handler = slash_commands.EbirdHandler(message)
     else:
         raise ValueError('Unrecognized slash command {}'.format(slash_command))
