@@ -3,14 +3,6 @@ from datetime import datetime
 from sqlalchemy import create_engine, MetaData, Table, select, func, and_
 import slack_utilities as su
 
-db_uri = os.environ["DATABASE_URL"]
-print(db_uri)
-engine = create_engine(db_uri)
-meta = MetaData(engine)
-user_circle = Table('user_circle', meta, autoload=True)
-
-ROOT_CMD = '5mr'
-
 
 def parse_parameters(handler):
 
@@ -46,17 +38,15 @@ class FmrHandler:
         'recent_notable': []
     }
 
-    def __init__(self, request):
-        self.command = request['command']
-        self.user_id = request['user_id']
-        self.subcommand_text = request['text']
-
+    def __init__(self, message):
+        self.command = message['command']
+        self.user_id = message['user_id']
+        self.subcommand_text = message['text']
+        # TO DO: move db stuff to be called only at the time when the subcommand requires it.
         self.db_uri = os.environ["DATABASE_URL"]
-        # self.engine = create_engine(db_uri)
-        # self.sub_command = request['text'][0]
-
-        # params_valid, validation_message, cmd, cmd_parameters = self.parse_parameters(self.subcommand_text.split())
-
+        self.engine = create_engine(self.db_uri)
+        self.meta = MetaData(self.engine)
+        self.user_circle = Table('user_circle', self.meta, autoload=True)
         return
 
     def __str__(self):
@@ -110,10 +100,10 @@ class FmrHandler:
         # the database won't handle it.
 
         # check if the user already has a circle by this name.
-        conn = engine.connect()
+        conn = self.engine.connect()
         print('Connected successfully. Checking for existing circle for this user and name.')
-        s = select([func.count()]).where(and_(user_circle.c.user_id == self.user_id,
-                                              user_circle.c.user_circle_name == options['user_circle_name']))
+        s = select([func.count()]).where(and_(self.user_circle.c.user_id == self.user_id,
+                                              self.user_circle.c.user_circle_name == options['user_circle_name']))
         result = conn.execute(s)
         row = result.fetchone()
         result.close()
@@ -127,10 +117,10 @@ class FmrHandler:
             return
 
         # check if the user already has a default circle.
-        conn = engine.connect()
+        conn = self.engine.connect()
         print('Connected successfully. Checking for existing default circle for this user.')
-        s = select([func.count()]).where(and_(user_circle.c.user_id == self.user_id,
-                                              user_circle.c.user_default_circle == 1))
+        s = select([func.count()]).where(and_(self.user_circle.c.user_id == self.user_id,
+                                              self.user_circle.c.user_default_circle == 1))
         result = conn.execute(s)
         row = result.fetchone()
         result.close()
@@ -140,10 +130,10 @@ class FmrHandler:
         options['user_default_circle'] = 1 if has_default == 0 else 0
 
         try:
-            conn = engine.connect()
+            conn = self.engine.connect()
             print('Connected successfully. Trying insert with the following options:')
             print(options)
-            conn.execute(user_circle.insert(), options)
+            conn.execute(self.user_circle.insert(), options)
             return_message = 'Created a circle called ' + options['user_circle_name'] + ' with a radius of ' + \
                              str(options['radius_km']) + 'km, centered at ' + str(options['latitude']) + ', ' + \
                              str(options['longitude']) + '.'
@@ -158,9 +148,9 @@ class FmrHandler:
 
     def list_circles(self, slack_client, ebird_client, cmd_params):
 
-        conn = engine.connect()
+        conn = self.engine.connect()
         print('Connected successfully. Pulling circles for this user.')
-        s = select([user_circle]).where(and_(user_circle.c.user_id == self.user_id, user_circle.c.deleted == 0))
+        s = select([self.user_circle]).where(and_(self.user_circle.c.user_id == self.user_id, self.user_circle.c.deleted == 0))
         result = conn.execute(s)
         rows = result.fetchall()
         result.close()
@@ -183,10 +173,10 @@ class FmrHandler:
 
         new_default_name = cmd_params[0]
 
-        conn = engine.connect()
+        conn = self.engine.connect()
         print('Connected successfully. Verifying existence of circle ' + new_default_name + ' for user ' + self.user_id + '.')
-        s = select([user_circle]).where(and_(user_circle.c.user_id == self.user_id,
-                                             user_circle.c.user_circle_name == new_default_name))
+        s = select([self.user_circle]).where(and_(self.user_circle.c.user_id == self.user_id,
+                                                  self.user_circle.c.user_circle_name == new_default_name))
         result = conn.execute(s)
         row = result.fetchone()
         result.close()
@@ -199,20 +189,20 @@ class FmrHandler:
             return
 
         # get current default circle, which will have to be un-set
-        s = select([user_circle]).where(and_(user_circle.c.user_id == self.user_id,
-                                             user_circle.c.user_default_circle == 1))
+        s = select([self.user_circle]).where(and_(self.user_circle.c.user_id == self.user_id,
+                                             self.user_circle.c.user_default_circle == 1))
         result = conn.execute(s)
         # assumes only 1 default is set at any given time.
         row = result.fetchone()
         result.close()
 
-        u = user_circle.update().values(user_default_circle=0, updated_at=datetime.now()).\
-            where(user_circle.c.user_circle_id == row['user_circle_id'])
+        u = self.user_circle.update().values(user_default_circle=0, updated_at=datetime.now()).\
+            where(self.user_circle.c.user_circle_id == row['user_circle_id'])
         conn.execute(u)
 
         # set new default
-        u = user_circle.update().values(user_default_circle=1, updated_at=datetime.now()).\
-            where(and_(user_circle.c.user_id == self.user_id, user_circle.c.user_circle_name == new_default_name))
+        u = self.user_circle.update().values(user_default_circle=1, updated_at=datetime.now()).\
+            where(and_(self.user_circle.c.user_id == self.user_id, self.user_circle.c.user_circle_name == new_default_name))
         conn.execute(u)
 
         return_message = 'Successfully set circle ' + new_default_name + ' to be your new default.'
@@ -232,16 +222,15 @@ class FmrHandler:
         # lat, lng, and dist would not make sense here, since they're looked up from the database
         # other optional parameters: circle_name
 
-        conn = engine.connect()
+        conn = self.engine.connect()
         print('Connected successfully. Trying select for user_id: ' + self.user_id)
 
         if 'circle_name' in options:
-            s = select([user_circle]).where(and_(user_circle.c.user_id == self.user_id,
-                                            user_circle.c.user_circle_name == options['circle_name']))
-
+            s = select([self.user_circle]).where(and_(self.user_circle.c.user_id == self.user_id,
+                                                      self.user_circle.c.user_circle_name == options['circle_name']))
         else:
-            s = select([user_circle]).where(and_(user_circle.c.user_id == self.user_id,
-                                            user_circle.c.user_default_circle == 1))
+            s = select([self.user_circle]).where(and_(self.user_circle.c.user_id == self.user_id,
+                                                      self.user_circle.c.user_default_circle == 1))
         result = conn.execute(s)
         row = result.fetchone()
         result.close()
@@ -278,16 +267,15 @@ class FmrHandler:
         # lat, lng, and dist would not make sense here, since they're looked up from the database
         # other optional parameters: circle_name
 
-        conn = engine.connect()
+        conn = self.engine.connect()
         print('Connected successfully. Trying select for user_id: ' + self.user_id)
 
         if 'circle_name' in options:
-            s = select([user_circle]).where(and_(user_circle.c.user_id == self.user_id,
-                                            user_circle.c.user_circle_name == options['circle_name']))
-
+            s = select([self.user_circle]).where(and_(self.user_circle.c.user_id == self.user_id,
+                                                      self.user_circle.c.user_circle_name == options['circle_name']))
         else:
-            s = select([user_circle]).where(and_(user_circle.c.user_id == self.user_id,
-                                            user_circle.c.user_default_circle == 1))
+            s = select([self.user_circle]).where(and_(self.user_circle.c.user_id == self.user_id,
+                                                      self.user_circle.c.user_default_circle == 1))
         result = conn.execute(s)
         row = result.fetchone()
         result.close()
@@ -310,4 +298,80 @@ class FmrHandler:
 
         su.post_message(slack_client, self.user_id, return_message)
 
+        return
+
+
+class EbirdHandler:
+
+    # list of accepted commands and their required parameters
+    COMMAND_PARAMS = {
+        'recent': ['latitude', 'longitude'],
+        'recent_notable': ['latitude', 'longitude']
+    }
+
+    def __init__(self, message):
+        self.command = message['command']
+        self.user_id = message['user_id']
+        self.subcommand_text = message['text']
+        return
+
+    def __str__(self):
+        return self.command + ' ' + self.subcommand_text
+
+    def recent(self, slack_client, ebird_client, cmd_params, to_channel_id):
+
+        lat = cmd_params.pop(0)
+        long = cmd_params.pop(0)
+
+        print('lat={lat}, long={long}'.format(lat=lat, long=long))
+
+        options = {}
+        for param in cmd_params:
+            print('parsing parameter: ' + param)
+            parsed = param.split('=')
+            options[parsed[0]] = parsed[1]
+
+        # set default distance to 8km (~5mi), since most users are interested in Five Mile Radius birding
+        if 'dist' not in options:
+            options['dist'] = 8
+
+        df = ebird_client.get_recent_observations_by_lat_long(lat, long, **options)
+
+        print('Rows returned: {rowcount}'.format(rowcount=len(df.index)))
+
+        if df.empty or 'errors' in df.columns:
+            return_message = 'eBird returned no observations near latitude ' + lat + ', longitude ' + long
+        else:
+            return_message = su.format_observation_list(df)
+
+        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=to_channel_id, msg=return_message))
+        su.post_message(slack_client, self.user_id, return_message)
+        return
+
+    def recent_notable(self, slack_client, ebird_client, cmd_params, to_channel_id):
+
+        lat = cmd_params.pop(0)
+        long = cmd_params.pop(0)
+
+        print('lat={lat}, long={long}'.format(lat=lat, long=long))
+
+        options = {}
+        for param in cmd_params:
+            print('parsing parameter: ' + param)
+            parsed = param.split('=')
+            options[parsed[0]] = parsed[1]
+
+        # set default distance to 8km (~5mi), since most users are interested in Five Mile Radius birding
+        if 'dist' not in options:
+            options['dist'] = 8
+
+        df = ebird_client.get_recent_notable_observations_by_lat_long(lat, long, **options)
+
+        if df.empty or 'errors' in df.columns:
+            return_message = 'eBird returned no notable observations near latitude ' + lat + ', longitude ' + long
+        else:
+            return_message = su.format_observation_list(df)
+
+        print('Sending message to Slack (channel: {channel}): {msg}'.format(channel=to_channel_id, msg=return_message))
+        su.post_message(slack_client, self.user_id, return_message)
         return

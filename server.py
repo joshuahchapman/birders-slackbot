@@ -3,8 +3,7 @@ from threading import Thread
 from flask import Flask, request, make_response
 from slackclient import SlackClient
 from ebird import EbirdClient
-import ebird_commands
-import fmr_commands
+import slash_commands
 
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
 EBIRD_TOKEN = os.environ["EBIRD_TOKEN"]
@@ -15,52 +14,31 @@ ebird_client = EbirdClient(EBIRD_TOKEN)
 app = Flask(__name__)
 
 
-@app.route("/slack/ebird", methods=["POST"])
-def ebird_command():
+def handler_factory(message):
+    slash_command = message['command']
+    if slash_command in ['/5mr', '/fmr']:
+        handler = slash_commands.FmrHandler(message)
+    elif slash_command == '/ebird':
+        handler = slash_commands.EbirdHandler(message)
+    else:
+        raise ValueError('Unrecognized slash command {}'.format(slash_command))
+    return handler
 
-    msg = request.form
-    print(msg)
 
-    user_id = msg['user_id']
-    full_command = msg['text'].split()
-    cmd = full_command[0]
-    print(cmd)
+@app.route("/slack/slashcmd", methods=["POST"])
+def command():
 
-    # Validate parameters
-    params_valid, validation_message, cmd, cmd_parameters = ebird_commands.parse_parameters(full_command)
+    print(request.form)
+    handler = handler_factory(request.form)
+    params_valid, validation_message, subcommand, subcommand_parameters = slash_commands.parse_parameters(handler)
 
     if not params_valid:
         return make_response(validation_message, 200)
 
-    else:
-        func = getattr(ebird_commands, cmd)
-        thread = Thread(target=func, args=(slack_client, ebird_client, cmd_parameters, user_id))
-        thread.start()
-        return make_response(validation_message + '\n`' + msg['command'] + ' ' + msg['text'] + '`', 200)
-
-
-@app.route("/slack/fmr", methods=["POST"])
-def fmr_command():
-
-    msg = request.form
-    print(msg)
-
-    user_id = msg['user_id']
-    full_command = msg['text'].split()
-    cmd = full_command[0]
-    print(cmd)
-
-    # Validate parameters
-    params_valid, validation_message, cmd, cmd_parameters = fmr_commands.parse_parameters(full_command)
-
-    if not params_valid:
-        return make_response(validation_message, 200)
-
-    else:
-        func = getattr(fmr_commands, cmd)
-        thread = Thread(target=func, args=(slack_client, ebird_client, cmd_parameters, user_id))
-        thread.start()
-        return make_response(validation_message + '\n`' + msg['command'] + ' ' + msg['text'] + '`', 200)
+    func = getattr(handler, subcommand)
+    thread = Thread(target=func, args=(slack_client, ebird_client, subcommand_parameters))
+    thread.start()
+    return make_response(validation_message + '\n`' + str(handler) + '`', 200)
 
 
 # Start the Flask server
