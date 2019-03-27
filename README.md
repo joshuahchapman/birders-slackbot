@@ -24,12 +24,20 @@ The following subcommands are available for `/ebird`:
 
 The following subcommands are available for `/5mr`:
 
-`add_circle`
+**add_circle**: Creates a new circle.
 
-`list_circles`
+| Parameter | Required? | Notes | Default Value | Example |
+| --------- | --------- | ----- | ------------- | ------- |
+| latitude  | YES       |       |               | 38.940365 |
+| longitude | YES       |       |               | -74.9212611 |
+| radius_km | no        | Radius of the circle in km | 8 | 3 |
+| name      | no        | A name for the circle | circle1 | HomeCircle |
 
-`set_default`
 
-`recent`
+**list_circles**: Lists your circles. No parameters.
 
-`recent_notable`
+**set_default**
+
+**recent**
+
+**recent_notable**
