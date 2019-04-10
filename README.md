@@ -24,7 +24,7 @@ The following subcommands are available for `/ebird`:
 
 The following subcommands are available for `/5mr`:
 
-**add_circle**: Creates a new circle.
+**add_circle**: Create a new circle.
 
 Example commands:
 
@@ -38,9 +38,9 @@ Example commands:
 | latitude  | YES       |       |               | 38.940365 |
 | longitude | YES       |       |               | -74.9212611 |
 | radius_km | no        | Radius of the circle in km | 8 | 15 |
-| name      | no        | A name for the circle | circle1 | HomeCircle |
+| name      | no        | A name for the circle | circle1 | home5mr |
 
-**list_circles**: Lists your circles. No parameters.
+**list_circles**: List your circles. No parameters.
 
 **set_default**: Set one of your circles to be the default, which will be used in queries where you don't specify a circle.
 
@@ -69,3 +69,16 @@ Example commands:
 | circle_name | no | The name of one of your existing circles | The circle you have flagged as your default | circle2 |
 
 **recent_notable**: Pull recent "notable" observations (as defined by eBird) from eBird. This command accepts all the optional parameters of eBird's "Recent nearby notable observations" request, which you can read about [here](https://documenter.getpostman.com/view/664302/ebird-api-20/2HTbHW#cedc0e26-172f-598c-aa4d-9e552340b5e7).
+
+Example commands:
+
+```
+/5mr recent_notable
+/5mr recent_notable circle_name=circle2
+/5mr recent_notable back=3
+/5mr recent_notable maxResults=20
+```
+
+| Parameter | Required? | Notes | Default Value | Example |
+| --------- | --------- | ----- | ------------- | ------- |
+| circle_name | no | The name of one of your existing circles | The circle you have flagged as your default | circle2 |
