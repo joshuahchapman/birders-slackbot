@@ -1,6 +1,6 @@
 # Birders Slackbot
 
-This project powers the interactive "slash commands" available in the [Birders Slack workspace](http://www.birders.info).
+This project powers the interactive "slash commands" available in the [Birders Slack workspace](http://birders.info).
 
 ## Overview
 
